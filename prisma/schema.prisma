@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model TopicSubscription {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String
+  topic     String
+  createdAt DateTime @default(now())
+
+  @@unique([token, topic])
+  @@map("topic_subscriptions")
+}
+
+model Topic {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("topics")
+}

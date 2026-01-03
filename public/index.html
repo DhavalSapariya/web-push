@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firebase Push Admin</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-glow: rgba(99, 102, 241, 0.4);
+        --bg: #0f172a;
+        --surface: #1e293b;
+        --surface-glass: rgba(30, 41, 59, 0.7);
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --success: #10b981;
+        --error: #ef4444;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Outfit", sans-serif;
+      }
+
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        background-image: radial-gradient(
+            circle at 10% 20%,
+            rgba(99, 102, 241, 0.15) 0%,
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at 90% 80%,
+            rgba(16, 185, 129, 0.15) 0%,
+            transparent 40%
+          );
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      header {
+        margin-bottom: 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(to right, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--surface-glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        border-color: var(--primary);
+      }
+
+      h2 {
+        margin-bottom: 1.5rem;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      h2::before {
+        content: "";
+        display: block;
+        width: 4px;
+        height: 24px;
+        background: var(--primary);
+        border-radius: 2px;
+      }
+
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        color: var(--text);
+        font-size: 1rem;
+        transition: all 0.2s;
+      }
+      select option {
+        background: var(--surface);
+        color: var(--text);
+        padding: 0.5rem;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+      }
+
+      button {
+        width: 100%;
+        padding: 0.875rem;
+        background: linear-gradient(135deg, var(--primary), #4f46e5);
+        border: none;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 1rem;
+        font-size: 1rem;
+      }
+      button:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .analytics-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .analytics-item:last-child {
+        border-bottom: none;
+      }
+      .topic-badge {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .count {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .loader {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #fff;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .toast {
+        padding: 1rem 1.5rem;
+        background: var(--surface);
+        border-left: 4px solid var(--primary);
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        color: var(--text);
+        animation: slideIn 0.3s ease-out forwards;
+        min-width: 300px;
+      }
+      .toast.success {
+        border-color: var(--success);
+      }
+      .toast.error {
+        border-color: var(--error);
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .preview-box {
+        background: #fff;
+        color: #333;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        position: relative;
+      }
+      .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.8rem;
+        color: #666;
+      }
+      .preview-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+      }
+      .preview-body {
+        font-size: 0.9rem;
+        color: #444;
+      }
+      .preview-img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+        display: none;
+        background: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- LOGIN OVERLAY -->
+    <div
+      id="login-overlay"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <div class="card" style="width: 100%; max-width: 400px">
+        <h2 style="justify-content: center; margin-bottom: 2rem">
+          Admin Login
+        </h2>
+        <form id="loginForm">
+          <div class="form-group">
+            <label>Admin ID</label>
+            <input type="text" id="admin-id" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="admin-pass" required />
+          </div>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="container" id="main-content" style="display: none">
+      <header>
+        <h1>Firebase Push Admin</h1>
+        <div
+          id="status-indicator"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--success);
+          "
+        >
+          <span
+            style="
+              width: 8px;
+              height: 8px;
+              background: var(--success);
+              border-radius: 50%;
+              box-shadow: 0 0 10px var(--success);
+            "
+          ></span>
+          System Online
+        </div>
+        <button
+          onclick="logout()"
+          style="
+            width: auto;
+            margin-top: 0;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+          "
+        >
+          Logout
+        </button>
+      </header>
+
+      <!-- TABS -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem">
+        <button
+          id="tab-send"
+          onclick="switchTab('send')"
+          class="tab-btn active"
+        >
+          Send Notification
+        </button>
+        <button id="tab-topics" onclick="switchTab('topics')" class="tab-btn">
+          Manage Topics
+        </button>
+      </div>
+
+      <style>
+        .tab-btn {
+          background: transparent;
+          border: 1px solid var(--border);
+          color: var(--text-muted);
+          width: auto;
+          margin-top: 0;
+          padding: 0.5rem 1.5rem;
+        }
+        .tab-btn.active {
+          background: var(--primary);
+          color: white;
+          border-color: var(--primary);
+        }
+        .tab-content {
+          display: none;
+        }
+        .tab-content.active {
+          display: block;
+        }
+
+        .topic-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem;
+          background: rgba(15, 23, 42, 0.3);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+        .topic-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+        .btn-sm {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.75rem;
+          width: auto;
+          margin: 0;
+        }
+        .btn-danger {
+          background: var(--error);
+        }
+      </style>
+
+      <!-- SEND NOTIFICATION TAB -->
+      <div id="view-send" class="tab-content active">
+        <div class="grid">
+          <div class="card">
+            <h2>Send Notification</h2>
+            <form id="pushForm">
+              <div class="form-group">
+                <label>Target Topic</label>
+                <select id="topic" required>
+                  <option value="" disabled selected>Select a topic...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  placeholder="Notification Title"
+                  required
+                  oninput="updatePreview()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Message Body</label>
+                <textarea
+                  id="body"
+                  rows="3"
+                  placeholder="Main content of the notification"
+                  oninput="updatePreview()"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Image URL (Optional)</label>
+                <input
+                  type="url"
+                  id="image"
+                  placeholder="https://..."
+                  oninput="updatePreview()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Redirect URL (Optional)</label>
+                <input
+                  type="url"
+                  id="url"
+                  placeholder="https://yoursite.com/page"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Custom Data JSON (Optional)</label>
+                <textarea
+                  id="data"
+                  rows="2"
+                  placeholder='{"key": "value"}'
+                ></textarea>
+              </div>
+
+              <button type="submit" id="sendBtn">
+                <span class="loader"></span>
+                <span id="btnText">Send Notification</span>
+              </button>
+            </form>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 2rem">
+            <!-- Preview -->
+            <div class="card">
+              <h2>Live Preview</h2>
+              <div
+                style="
+                  background: #e5e7eb;
+                  padding: 1rem;
+                  border-radius: 0.5rem;
+                "
+              >
+                <input
+                  type="text"
+                  disabled
+                  value="Android Notification"
+                  style="
+                    background: transparent;
+                    border: none;
+                    color: #666;
+                    font-size: 0.75rem;
+                    padding: 0;
+                    margin-bottom: 0.5rem;
+                  "
+                />
+                <div class="preview-box">
+                  <div class="preview-header">
+                    <span style="font-weight: 600">App Name</span> • Now
+                  </div>
+                  <div class="preview-title" id="preview-title">
+                    Title goes here
+                  </div>
+                  <div class="preview-body" id="preview-body">
+                    Message body goes here...
+                  </div>
+                  <img id="preview-img" class="preview-img" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Analytics -->
+            <div class="card">
+              <h2>
+                Topic Analytics
+                <button
+                  onclick="fetchAnalytics()"
+                  style="
+                    width: auto;
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.75rem;
+                    margin: 0;
+                    margin-left: auto;
+                    background: var(--border);
+                  "
+                >
+                  Refresh
+                </button>
+              </h2>
+              <div id="analytics-list">
+                <div
+                  style="
+                    text-align: center;
+                    color: var(--text-muted);
+                    padding: 2rem;
+                  "
+                >
+                  Loading stats...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANAGE TOPICS TAB -->
+      <div id="view-topics" class="tab-content">
+        <div class="card">
+          <h2>Create New Topic</h2>
+          <style>
+            .create-topic-form {
+              display: grid;
+              grid-template-columns: 1fr 2fr auto;
+              gap: 1rem;
+              align-items: end;
+            }
+
+            @media (max-width: 768px) {
+              .create-topic-form {
+                grid-template-columns: 1fr;
+              }
+              .create-topic-form button {
+                width: 100%;
+              }
+              .form-group.no-margin-mobile {
+                margin-bottom: 1rem !important; /* Restore margin on mobile */
+              }
+            }
+          </style>
+
+          <form id="createTopicForm" class="create-topic-form">
+            <div class="form-group no-margin-mobile" style="margin-bottom: 0">
+              <label>Topic Name</label>
+              <input
+                type="text"
+                id="new-topic-name"
+                placeholder="e.g. promotions"
+                required
+              />
+            </div>
+            <div class="form-group no-margin-mobile" style="margin-bottom: 0">
+              <label>Description</label>
+              <input
+                type="text"
+                id="new-topic-desc"
+                placeholder="Topic description..."
+                required
+              />
+            </div>
+            <button type="submit" style="width: auto; margin-top: 0">
+              Create Topic
+            </button>
+          </form>
+        </div>
+
+        <br />
+
+        <div class="card">
+          <h2>Existing Topics</h2>
+          <div id="topics-list-container">
+            <!-- Topics loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+      const API_BASE = "/web-push";
+      const API = "/api";
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Check session
+        if (sessionStorage.getItem("admin_auth") === "true") {
+          showAdmin();
+        }
+      });
+
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const id = document.getElementById("admin-id").value;
+        const pass = document.getElementById("admin-pass").value;
+
+        if (id === "9313455405" && pass === "123456") {
+          sessionStorage.setItem("admin_auth", "true");
+          showAdmin();
+        } else {
+          alert("Invalid credentials");
+        }
+      });
+
+      function showAdmin() {
+        document.getElementById("login-overlay").style.display = "none";
+        document.getElementById("main-content").style.display = "block";
+        fetchAnalytics();
+        fetchTopics();
+      }
+
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          sessionStorage.removeItem("admin_auth");
+          location.reload();
+        }
+      }
+
+      function switchTab(tab) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((el) => el.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((el) => el.classList.remove("active"));
+
+        document.getElementById(`view-${tab}`).classList.add("active");
+        document.getElementById(`tab-${tab}`).classList.add("active");
+      }
+
+      // Preview Logic
+      function updatePreview() {
+        const title =
+          document.getElementById("title").value || "Title goes here";
+        const body =
+          document.getElementById("body").value || "Message body goes here...";
+        const image = document.getElementById("image").value;
+
+        document.getElementById("preview-title").textContent = title;
+        document.getElementById("preview-body").textContent = body;
+
+        const imgEl = document.getElementById("preview-img");
+        if (image) {
+          imgEl.src = image;
+          imgEl.style.display = "block";
+        } else {
+          imgEl.style.display = "none";
+        }
+      }
+
+      // Send Notification
+      document
+        .getElementById("pushForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById("sendBtn");
+          const loader = btn.querySelector(".loader");
+          const btnText = document.getElementById("btnText");
+
+          btn.disabled = true;
+          loader.style.display = "inline-block";
+          btnText.textContent = "Sending...";
+
+          try {
+            const topic = document.getElementById("topic").value;
+            const title = document.getElementById("title").value;
+            const body = document.getElementById("body").value;
+            const image = document.getElementById("image").value;
+            const url = document.getElementById("url").value;
+            const dataStr = document.getElementById("data").value;
+
+            let data = undefined;
+            if (dataStr) {
+              try {
+                data = JSON.parse(dataStr);
+              } catch (err) {
+                throw new Error("Invalid JSON in Custom Data field");
+              }
+            }
+
+            const payload = { topic, title, body, image, url, data };
+            Object.keys(payload).forEach(
+              (key) => !payload[key] && delete payload[key]
+            );
+
+            const res = await fetch(
+              `${API}${API_BASE}/send-topic-notification`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              }
+            );
+
+            if (!res.ok) {
+              const errorData = await res.json();
+              throw new Error(errorData.message || "Failed to send");
+            }
+
+            showToast("Notification Sent Successfully!", "success");
+          } catch (error) {
+            showToast(error.message, "error");
+          } finally {
+            btn.disabled = false;
+            loader.style.display = "none";
+            btnText.textContent = "Send Notification";
+          }
+        });
+
+      // Create Topic
+      document
+        .getElementById("createTopicForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("new-topic-name").value;
+          const description = document.getElementById("new-topic-desc").value;
+
+          try {
+            const res = await fetch(`${API}${API_BASE}/topic`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, description }),
+            });
+            if (!res.ok) throw new Error("Failed to create topic");
+
+            document.getElementById("createTopicForm").reset();
+            showToast("Topic created successfully!", "success");
+            fetchTopics(); // Refresh list
+          } catch (error) {
+            showToast(error.message, "error");
+          }
+        });
+
+      // Fetch Topics
+      async function fetchTopics() {
+        try {
+          const res = await fetch(`${API}${API_BASE}/topic`);
+          const json = await res.json();
+          const topics = json.data || [];
+
+          // Populate List
+          const list = document.getElementById("topics-list-container");
+          if (topics.length === 0) {
+            list.innerHTML =
+              '<div style="color: var(--text-muted); text-align: center;">No topics found. Create one above.</div>';
+          } else {
+            list.innerHTML = topics
+              .map(
+                (t) => `
+                    <div class="topic-row">
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">${
+                              t.name
+                            }</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">${
+                              t.description || "No description"
+                            }</div>
+                        </div>
+                        <div class="topic-actions">
+                            <button class="btn-sm btn-danger" onclick="deleteTopic('${
+                              t.id
+                            }')">Delete</button>
+                        </div>
+                    </div>
+                `
+              )
+              .join("");
+          }
+
+          // Populate Select Dropdown for Send Form
+          const select = document.getElementById("topic");
+          if (topics.length === 0) {
+            select.innerHTML =
+              '<option value="" disabled selected>No topics available</option>';
+          } else {
+            select.innerHTML =
+              '<option value="" disabled selected>Select a topic...</option>' +
+              topics
+                .map(
+                  (t) =>
+                    `<option value="${t.name}">${t.name} ${
+                      t.description ? `(${t.description})` : ""
+                    }</option>`
+                )
+                .join("");
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      // Delete Topic
+      async function deleteTopic(id) {
+        if (!confirm("Are you sure you want to delete this topic?")) return;
+        try {
+          const res = await fetch(`${API}${API_BASE}/topic/${id}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) throw new Error("Failed to delete");
+          showToast("Topic deleted", "success");
+          fetchTopics();
+        } catch (error) {
+          showToast(error.message, "error");
+        }
+      }
+
+      // Analytics Logic
+      async function fetchAnalytics() {
+        const container = document.getElementById("analytics-list");
+        try {
+          const res = await fetch(`${API}${API_BASE}/analytics`);
+          if (!res.ok) throw new Error("Failed to load analytics");
+          const data = await res.json();
+
+          if (data.length === 0) {
+            container.innerHTML =
+              '<div style="text-align: center; color: var(--text-muted); padding: 1rem;">No subscriptions yet</div>';
+            return;
+          }
+
+          container.innerHTML = data
+            .map(
+              (item) => `
+                <div class="analytics-item">
+                    <span class="topic-badge">#${item.topic}</span>
+                    <div class="count">${item.subscribers} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">users</span></div>
+                </div>
+            `
+            )
+            .join("");
+        } catch (error) {
+          console.error(error);
+          container.innerHTML =
+            '<div style="text-align: center; color: var(--error); padding: 1rem;">Failed to load stats</div>';
+        }
+      }
+
+      // Toast Helper
+      function showToast(msg, type = "success") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = msg;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.animation = "slideIn 0.3s ease-in reverse forwards";
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>
