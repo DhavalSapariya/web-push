@@ -10,7 +10,7 @@ Prefix: `/api/web-push` (assuming standard route prefix, adjusted based on `serv
 
 ## 1. Subscribe to Topic
 
-**Endpoint:** `POST /subscribe-topic`
+**Endpoint:** `POST https://known-vivia-web-push-ffb6573a.koyeb.app/api/web-push/subscribe-topic`
 
 Subscribe one or more FCM tokens to a specific topic.
 
@@ -18,7 +18,7 @@ Subscribe one or more FCM tokens to a specific topic.
 
 ```json
 {
-  "tokens": ["FCM_TOKEN_1"s],
+  "tokens": ["FCM_TOKEN_1"],
   "topic": "news"
 }
 ```
