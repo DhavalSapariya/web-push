@@ -18,7 +18,7 @@ Subscribe one or more FCM tokens to a specific topic.
 
 ```json
 {
-  "tokens": ["FCM_TOKEN_1"s],
+  "tokens": ["FCM_TOKEN_1"],
   "topic": "news"
 }
 ```
